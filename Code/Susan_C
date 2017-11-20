@@ -1,0 +1,234 @@
+#include <stdio.h>
+#include <wiringPi.h> 
+
+// Define GPIO pins:
+#define stp 0 
+#define dir 1
+#define en 2
+#define column0_switch 3
+#define column1_switch 4
+#define column2_switch 5
+#define column3_switch 6
+#define slot0_LED 7
+#define slot1_LED 8
+#define slot2_LED 9
+#define slot3_LED 10
+#define slot4_LED 11
+#define slot0_sensor 12
+#define slot1_sensor 13
+#define slot2_sensor 14
+#define slot3_sensor 15
+#define slot4_sensor 16
+
+// define direction as boolean:
+#define clockwise 0
+#define counterclockwise 1
+
+// define global variables:
+uint8_t current_pos;
+
+int main(void) {
+	//**********
+	// Setup:
+	//**********
+
+	// Define pin directions:
+	pinMode(stp, OUTPUT);
+	pinMode(dir, OUTPUT);
+	pinMode(en, OUTPUT);
+	pinMode(column0_switch, INPUT);
+	pinMode(column1_switch, INPUT);
+	pinMode(column2_switch, INPUT);
+	pinMode(column3_switch, INPUT);
+	pinMode(slot0_LED, OUTPUT);
+	pinMode(slot1_LED, OUTPUT);
+	pinMode(slot2_LED, OUTPUT);
+	pinMode(slot3_LED, OUTPUT);	
+	pinMode(slot4_LED, OUTPUT);
+	pinMode(slot0_sensor, INPUT);
+	pinMode(slot1_sensor, INPUT);
+	pinMode(slot2_sensor, INPUT);
+	pinMode(slot3_sensor, INPUT);
+	pinMode(slot4_sensor, INPUT);	
+
+	// Reset motor controls:
+	resetMotorControl();
+
+	// Read position switches:
+	uint8_t is_column0 = digitalRead(column0_switch);
+	uint8_t is_column1 = digitalRead(column0_switch);
+	uint8_t is_column2 = digitalRead(column0_switch);
+	uint8_t is_column3 = digitalRead(column0_switch);
+
+	// Determine current position:
+	if(is_column0) {
+		current_pos = 0;
+	} else if(is_column1) {
+		current_pos = 1;
+	} else if(is_column2) {
+		current_pos = 2;
+	} else if(is_column3) {
+		current_pos = 3;
+	}
+	
+
+	//**********
+	// Loop:
+	//**********
+		while(1) {
+
+			// Dummy Serial Code from console:
+
+
+
+	}
+}
+
+void turnOffAllLEDs() {
+  // Turn off all LEDs:
+    digitalWrite(slot0_LED, LOW);
+    digitalWrite(slot1_LED, LOW);
+    digitalWrite(slot2_LED, LOW);
+    digitalWrite(slot3_LED, LOW);
+    digitalWrite(slot4_LED, LOW);
+}
+
+void rotate(bool direction) {
+
+  // temp variables to store limit switch values:
+  uint8_t limit0 = 0; // default to false
+  uint8_t limit1 = 0;
+  uint8_t limit2 = 0;
+  uint8_t limit3 = 0;
+  uint8_t limit4 = 0;
+
+  digitalWrite(dir, direction);
+
+	// Run for some time to ignore switches:
+  for (x = 0; x < 400; x++) {
+    digitalWrite(stp, HIGH); 
+    delay(2);
+    digitalWrite(stp, LOW); 
+    delay(2);
+  }
+  do {
+   digitalWrite(stp, HIGH); //Trigger one step forward
+    delay(1);
+    digitalWrite(stp, LOW); //Pull step pin low so it can be triggered again
+    delay(1);
+    limit0 = digitalRead(limit_switch);
+    limit1 = digitalRead(limit_switch);
+    limit2 = digitalRead(limit_switch);
+    limit3 = digitalRead(limit_switch);
+    limit4 = digitalRead(limit_switch);
+    // Stop if any switches are triggered:
+    limit = limit0 | limit1 | limit2 | limit3 | limit4;
+  } while (!limit);
+
+  // Update position:
+  if(limit0) 
+  	current_pos = 0;
+  else if(limit1)
+  	current_pos = 1;
+  else if(limit2)
+  	current_pos = 2;
+  else if(limit3)
+  	current_pos = 3;
+  else if(limit4)
+  	current_pos = 4;
+}
+
+void resetMotorControl() {
+	digitalWrite(stp, low);
+	digitalWrite(dir, low);
+	digitalWrite(en, high);
+}
+
+void calculateNextPosition() {
+	turnOffAllLEDs();
+
+	if (current_pos == 0) {
+		if (desired_pos == 0) {
+	      // DO NOTHING
+	    }
+	    else if (desired_pos == 1) {
+	      rotate(CLOCKWISE);
+	    }
+	    else if (desired_pos == 2) {
+	      rotate(CLOCKWISE);
+	      rotate(CLOCKWISE);
+	    }
+	    else if (desired_pos == 3) {
+	      rotate(COUNTERCLOCKWISE);
+	    }
+	  }
+	else if (current_pos == 1) {
+	    if (desired_pos == 0) {
+	      rotate(COUNTERCLOCKWISE);
+	    }
+	    else if (desired_pos == 1) {
+	      // DO NOTHING
+	    }
+	    else if (desired_pos == 2) {
+	      rotate(CLOCKWISE);
+	    }
+	    else if (desired_pos == 3) {
+	      rotate(COUNTERCLOCKWISE);
+	      rotate(COUNTERCLOCKWISE);
+	    }
+	  }
+	else if (current_pos == 2) {
+	    if (desired_pos == 0) {
+	      rotate(COUNTERCLOCKWISE);
+	      rotate(COUNTERCLOCKWISE);
+	    }
+	    else if (desired_pos == 1) {
+	      rotate(COUNTERCLOCKWISE);
+	    }
+	    else if (desired_pos == 2) {
+	      // DO NOTHING
+	    }
+	    else if (desired_pos == 3) {
+	      rotate(CLOCKWISE);
+	    }
+	  }
+	else if (current_pos == 3) {
+	    if (desired_pos == 0) {
+	      rotate(CLOCKWISE);
+	    }
+	    else if (desired_pos == 1) {
+	      rotate(CLOCKWISE);
+	      rotate(CLOCKWISE);
+	    }
+	    else if (desired_pos == 2) {
+	      rotate(COUNTERCLOCKWISE);
+	    }
+	    else if (desired_pos == 3) {
+	      // DO NOTHING
+    }
+  }
+}
+
+void set_LED() {
+
+  if (desired_LED == 0) {
+    digitalWrite(slot0_LED, HIGH);
+  }
+
+  else if (desired_LED == 1) {
+    digitalWrite(slot1_LED, HIGH);
+  }
+
+  else if (desired_LED == 2) {
+    digitalWrite(slot2_LED, HIGH);
+  }
+
+  else if (desired_LED == 3) {
+    digitalWrite(slot3_LED, HIGH);
+  }
+
+  else if (desired_LED == 4) {
+  	digitalWrite(slot4_LED, HIGH)
+  }
+
+}
